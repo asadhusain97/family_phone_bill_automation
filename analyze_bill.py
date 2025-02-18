@@ -127,7 +127,9 @@ def analyze_bill():
     if not image:
         return
     
-    cropped_image = image.crop((0, 240, image.width, 800))
+    cropped_image = image.crop((0, yaml_data["table_top_crop"], image.width, yaml_data["table_bottom_crop"]))
+    cropped_image.save("attachments/summary_table_image.jpg", 'JPEG')
+    logging.info("Table image saved")
     text = extract_text_from_image(cropped_image)
     
     df = process_text_to_dataframe(text, yaml_data)
