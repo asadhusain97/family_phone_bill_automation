@@ -1,9 +1,10 @@
 # user email and app password
+# email of the person who gets the bill and will send the summary
 USER: "asadeveloper10@gmail.com"
-GAPP_PASSWORD: "dmsm rniv uitr vsiv"
+GAPP_PASSWORD: "dmsm rniv aaaa aaaa" # get app password of your google account (very confidential)
 
 # filter to find the mails in this criteria and read the latest one
-sender: "asad.husain97@gmail.com" # mail should have this sender
+sender: "asadeveloper10@gmail.com" # mail should have this sender -- ideally phone company
 subject: "Test send"  # mail should have this subject
 lookback_days: 7  # ex. 4,7,.. any mail after this date will be read
 
@@ -12,17 +13,7 @@ summary_recipient_email: "asadeveloper10+test@gmail.com"
 summary_subject: "T-Mobile bill per user summary"
 
 # link numbers to members for readability
-member_numbers:
-  # "(765) 637-3809": "Durriya"
-  # "(765) 637-5037": "Asad"
-  # "(765) 637-3743": "Simranjeet"
-  # "(765) 637-5290": "Apoorva"
-  # "(315) 909-4995": "Raghav"
-  # "(765) 746-9116": "Arjun"
-  # "(716) 533-9580": "Mohit"
-  # "(201) 275-8731": "Rabab"
-  # "(765) 476-6073": "Samir"
-  # "(609) 433-6321": "Mitali"
+member_numbers: # delete if not needed
   "(999) 637-3009": "Raina"
   "(999) 637-5007": "Dhoni"
   "(999) 637-3003": "Yuvraj"
@@ -39,7 +30,7 @@ member_numbers:
 plan_cost_for_all_members: True
 
 # delete attachments after run completes
-delete_attachments: False
+delete_attachments: True
 
 # Paths
 bill_path: "attachments/tmobile_bill.pdf"

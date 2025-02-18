@@ -7,6 +7,7 @@ This repository contains a Python script that parses T-Mobile bills and sends a 
    a) Go to gmail settings and Enable IMAP.
    b) Go to google account settings and get the app password. (only available after switching on 2-factor authentication)
 2. Fill in the configs with the email addresses you care about
+3. Rename the example.yml as 'configs.yml'
 
 Now you can either download docker and build and run a docker image or simply create a virtual environment and install the relevant libraries in the requirements.txt file and then run the main.py file. 
 
