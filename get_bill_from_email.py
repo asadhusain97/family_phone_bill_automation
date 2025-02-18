@@ -1,0 +1,101 @@
+import os
+import imaplib
+import email
+from email import policy
+from email.header import decode_header
+import logging
+import yaml
+
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Create a folder to save attachments
+ATTACHMENT_DIR = "attachments"
+if not os.path.exists(ATTACHMENT_DIR):
+    os.makedirs(ATTACHMENT_DIR)
+
+
+def read_yaml_file(file_path):
+    """Reads and parses a YAML file."""
+    logging.info(f"Reading YAML file from {file_path}")
+    try:
+        with open(file_path, 'r') as file:
+            data = yaml.safe_load(file)
+            logging.info("YAML file read successfully")
+            return data
+    except (yaml.YAMLError, FileNotFoundError) as e:
+        logging.error(f"Error reading YAML file: {e}")
+        return None
+
+
+def connect_to_mailbox(yaml_data):
+    logging.info("Connecting to Gmail's IMAP server...")
+    mail = imaplib.IMAP4_SSL("imap.gmail.com")
+    mail.login(yaml_data["USER"], yaml_data["GAPP_PASSWORD"])
+    mail.select("inbox")
+    return mail
+
+
+def search_emails(mail, sender, subject, date):
+    logging.info(f"Searching for emails from {sender} with subject '{subject}' since {date}...")
+    search_criteria = f'(FROM "{sender}" SUBJECT "{subject}" SINCE "{date}")'
+    status, messages = mail.search(None, search_criteria)
+    if status != "OK":
+        logging.warning("No emails found matching the criteria.")
+        return []
+    return messages[0].split()
+
+
+def save_attachment(part, directory):
+    filename = part.get_filename()
+    if filename:
+        filepath = os.path.join(directory, filename)
+        with open(filepath, "wb") as f:
+            f.write(part.get_payload(decode=True))
+        logging.info(f"Attachment saved: {filepath}")
+
+
+def fetch_and_process_email(mail, email_id):
+    status, msg_data = mail.fetch(email_id, "(RFC822)")
+    for response_part in msg_data:
+        if isinstance(response_part, tuple):
+            msg = email.message_from_bytes(response_part[1], policy=policy.default)
+            subject, encoding = decode_header(msg["Subject"])[0]
+            if isinstance(subject, bytes):
+                subject = subject.decode(encoding if encoding else "utf-8")
+
+            for part in msg.walk():
+                if part.get_content_disposition() == "attachment":
+                    filename = part.get_filename()
+                    if filename:
+                        new_filename = "tmobile_bill.pdf"
+                        filepath = os.path.join(ATTACHMENT_DIR, new_filename)
+                        with open(filepath, "wb") as f:
+                            f.write(part.get_payload(decode=True))
+                        logging.info(f"Attachment saved: {filepath}")
+
+
+def get_bill_from_email():
+    yaml_file = 'configs.yml'
+    yaml_data = read_yaml_file(yaml_file)
+    if not yaml_data:
+        return
+
+    try:
+        mail = connect_to_mailbox(yaml_data)
+
+        email_ids = search_emails(mail, yaml_data["sender"], yaml_data["subject"], yaml_data["date"])
+        if email_ids:
+            logging.info(f"Found {len(email_ids)} matching email(s). Fetching the latest one...")
+            fetch_and_process_email(mail, email_ids[-1])
+        else:
+            logging.info("No emails matched the search criteria.")
+
+        logging.info("Logging out and closing the connection.")
+        mail.logout()
+
+    except Exception as e:
+        logging.error(f"Error: {e}")
+
+if __name__ == "__main__":
+    get_bill_from_email()
