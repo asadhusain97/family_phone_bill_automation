@@ -29,6 +29,9 @@ member_numbers: # delete if not needed
 # alternate is to only divide plan cost for included members and new members pay full $40
 plan_cost_for_all_members: True
 
+# delete attachments after run completes
+delete_attachments: True
+
 # Paths
 bill_path: "attachments/tmobile_bill.pdf"
 summarized_bill_path: "attachments/summary.csv"

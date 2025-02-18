@@ -98,8 +98,8 @@ def send_summary_email():
     summary_body = f"Here is how much each member of the family owes for last months' T-Mobile bill:\n\n{csv_content}"
 
     send_email(yaml_data["USER"], yaml_data["GAPP_PASSWORD"], yaml_data["summary_recipient_email"], yaml_data["summary_subject"], summary_body)
-    delete_all_files_in_folder("attachments/")
-
+    if yaml_data["delete_attachments"]: 
+        delete_all_files_in_folder("attachments/")
 
 if __name__ == "__main__":
     send_summary_email()
