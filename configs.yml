@@ -1,19 +1,19 @@
 # user email and app password
 # email of the person who gets the bill and will send the summary
 USER: "asadeveloper10@gmail.com"
-GAPP_PASSWORD: "dmsm rniv uitr ****" # get app password of your google account (very confidential)
+GAPP_PASSWORD: "dmsm rniv aaaa aaaa" # get app password of your google account (very confidential)
 
 # filter to find the mails in this criteria and read the latest one
 sender: "asadeveloper10@gmail.com" # mail should have this sender -- ideally phone company
 subject: "Test send"  # mail should have this subject
-date: "15-Feb-2025"  # DD-MMM-YYYY format (any mail after this date will be read)
+lookback_days: 7  # ex. 4,7,.. any mail after this date will be read
 
 # send summary mail 
 summary_recipient_email: "asadeveloper10+test@gmail.com"
 summary_subject: "T-Mobile bill per user summary"
 
 # link numbers to members for readability
-member_numbers:
+member_numbers: # delete if not needed
   "(999) 637-3009": "Raina"
   "(999) 637-5007": "Dhoni"
   "(999) 637-3003": "Yuvraj"

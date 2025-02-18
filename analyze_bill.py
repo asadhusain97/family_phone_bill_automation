@@ -98,7 +98,11 @@ def process_text_to_dataframe(text, yaml_data):
     
     lower_other_cols = [x.lower() for x in other_cols]
     df["final_amt"] = df[lower_other_cols].sum(axis=1)
-    df["member"] = df["phone_num"].map(yaml_data["member_numbers"])
+    # map names to numbers for better visibility
+    if yaml_data["member_numbers"] is not None:
+        df["member"] = df["phone_num"].map(yaml_data["member_numbers"])
+    else:
+        df["member"] = df["phone_num"]
     df = df[["member", "final_amt"]].reset_index(drop=True)
     
     logging.info(f"Total bill sums up to ${df.final_amt.sum():,.2f}")
