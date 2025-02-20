@@ -6,10 +6,11 @@ This repository contains a Python script that parses T-Mobile bills and sends a 
 1. Get the gmail app password
    a) Go to gmail settings and Enable IMAP.
    b) Go to google account settings and get the app password. (only available after switching on 2-factor authentication)
-2. Fill in the configs with the email addresses you care about
-3. Rename the example.yml as 'configs.yml'
+2. Make the .env file with the password, numbers, and emails addresses you care about
+3. Modify the config if necessary
 
-Now you can either download docker and build and run a docker image or simply create a virtual environment and install the relevant libraries in the requirements.txt file and then run the main.py file. 
+Now you can either download docker and build and run a docker image or simply create a virtual environment with requirements.txt file and then run the main.py file to test.
+Follow the tutorials linked below to set it up automatically using any free tool.
 
 ## Components
 The repository includes the following components:
@@ -22,17 +23,11 @@ text as a pandas dataframe and performs the operations to summarize the bill.
 - main.py: Entrypoint to the app which calls all of the above scripts.
 
 ## Considerations
-I hosted this app on a free online python cloud compute platform like [pythonanywhere.com](https://www.pythonanywhere.com/), and made it to run chronologically every month. It makes it easy to split the bill.
+I hosted this app on a free online python cloud compute platform like Github Actions or [pythonanywhere.com](https://www.pythonanywhere.com/), and made it to run chronologically every month. It makes it easy to split the bill.
 The repository is designed to be used with a T-Mobile bill email that has the standard bill as an attachment (see the mock bill in the attachments folder), and may require modifications to work with other types of emails.
 
 ## Shout outs
 If you want to learn follow these videos/channels to do more such automation. 
-[Gmail + python](https://youtu.be/K21BSZPFIjQ?si=1RTgdKi8G3R6Mo76)
-[Python Anywhere tutorial](https://youtu.be/0G8bjcY4lBM?si=CVgiiHVA4V3Q1toW)
-
-
-
-
-
-
-
+* [Gmail + python](https://youtu.be/K21BSZPFIjQ?si=1RTgdKi8G3R6Mo76)
+* [Github Actions tutorial](https://youtu.be/PaGp7Vi5gfM?si=YlXAVeVIsx7hy3cR)
+* [Python Anywhere tutorial](https://youtu.be/0G8bjcY4lBM?si=CVgiiHVA4V3Q1toW)

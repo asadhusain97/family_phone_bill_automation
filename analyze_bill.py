@@ -1,3 +1,5 @@
+import os
+import json
 import logging
 import yaml
 import pandas as pd
@@ -8,6 +10,8 @@ from PIL import Image
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+MEMBER_NAMES = os.environ.get("MEMBER_NAMES")
 
 def read_yaml_file(file_path):
     """Reads and parses a YAML file."""
@@ -99,8 +103,8 @@ def process_text_to_dataframe(text, yaml_data):
     lower_other_cols = [x.lower() for x in other_cols]
     df["final_amt"] = df[lower_other_cols].sum(axis=1)
     # map names to numbers for better visibility
-    if yaml_data["member_numbers"] is not None:
-        df["member"] = df["phone_num"].map(yaml_data["member_numbers"])
+    if MEMBER_NAMES is not None:
+        df["member"] = df["phone_num"].replace(json.loads(MEMBER_NAMES))
     else:
         df["member"] = df["phone_num"]
     df = df[["member", "final_amt"]].reset_index(drop=True)

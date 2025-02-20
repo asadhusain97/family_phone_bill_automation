@@ -6,11 +6,12 @@ WORKDIR /app
 
 # Copy the requirements file into the working directory
 COPY requirements.txt .
+COPY .env .env
 
 # Install the dependencies
 RUN mkdir -p /attachments
-RUN apt-get update && apt-get install -y tesseract-ocr
-RUN apt-get update && apt-get install -y poppler-utils
+# RUN apt-get update && apt-get install -y tesseract-ocr
+# RUN apt-get update && apt-get install -y poppler-utils
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code into the working directory

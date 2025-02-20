@@ -8,6 +8,9 @@ import os
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+USER = os.environ.get("USER")
+PASSWORD = os.environ.get("GAPP_PASSWORD")
+RECIPIENT_EMAIL = os.environ.get("SUMMARY_EMAIL_RECIPIENT")
 
 def read_yaml_file(file_path):
     """Reads and parses a YAML file."""
@@ -86,7 +89,7 @@ def delete_all_files_in_folder(folder_path):
             logging.info(f"Skipped (not a file): {file_path}")
 
 
-def send_summary_email():
+def send_summary_email(user = USER, password = PASSWORD, recipient_email = RECIPIENT_EMAIL):
     """Sends a formatted summary mail to the recipient."""
     yaml_file = 'configs.yml'
     yaml_data = read_yaml_file(yaml_file)
@@ -95,9 +98,14 @@ def send_summary_email():
 
     csv_content = read_summary_file(yaml_data["summarized_bill_path"])
 
-    summary_body = f"Here is how much each member of the family owes for last months' T-Mobile bill:\n\n{csv_content}"
+    summary_body = f"""
+        Here is how much each member of the family owes for last months' 
+        T-Mobile bill:
+        \n\n{csv_content}\n\n
+        Have a good day beautiful!
+        """
 
-    send_email(yaml_data["USER"], yaml_data["GAPP_PASSWORD"], yaml_data["summary_recipient_email"], yaml_data["summary_subject"], summary_body)
+    send_email(user, password, recipient_email, yaml_data["summary_subject"], summary_body)
     if yaml_data["delete_attachments"]: 
         delete_all_files_in_folder("attachments/")
 

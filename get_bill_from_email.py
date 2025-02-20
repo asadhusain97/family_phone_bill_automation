@@ -15,6 +15,9 @@ ATTACHMENT_DIR = "attachments"
 if not os.path.exists(ATTACHMENT_DIR):
     os.makedirs(ATTACHMENT_DIR)
 
+USER = os.environ.get("USER")
+PASSWORD = os.environ.get("GAPP_PASSWORD")
+TRIGGER_MAIL_SENDER = os.environ.get("TRIGGER_MAIL_SENDER")
 
 def read_yaml_file(file_path):
     """Reads and parses a YAML file."""
@@ -29,11 +32,12 @@ def read_yaml_file(file_path):
         return None
 
 
-def connect_to_mailbox(yaml_data):
+def connect_to_mailbox(yaml_data, user=USER, password=PASSWORD):
     logging.info("Connecting to Gmail's IMAP server...")
     mail = imaplib.IMAP4_SSL("imap.gmail.com")
-    mail.login(yaml_data["USER"], yaml_data["GAPP_PASSWORD"])
+    mail.login(USER, PASSWORD)
     mail.select("inbox")
+    logging.info("Logged in!")
     return mail
 
 
@@ -78,7 +82,7 @@ def fetch_and_process_email(mail, email_id):
                         logging.info(f"Attachment saved: {filepath}")
 
 
-def get_bill_from_email():
+def get_bill_from_email(trigger_mail_sender=TRIGGER_MAIL_SENDER):
     yaml_file = 'configs.yml'
     yaml_data = read_yaml_file(yaml_file)
     if not yaml_data:
@@ -87,7 +91,7 @@ def get_bill_from_email():
     try:
         mail = connect_to_mailbox(yaml_data)
 
-        email_ids = search_emails(mail, yaml_data["sender"], yaml_data["subject"], yaml_data["lookback_days"])
+        email_ids = search_emails(mail, trigger_mail_sender, yaml_data["subject"], yaml_data["lookback_days"])
         if email_ids:
             logging.info(f"Found {len(email_ids)} matching email(s). Fetching the latest one...")
             fetch_and_process_email(mail, email_ids[-1])
