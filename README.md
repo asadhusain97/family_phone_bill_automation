@@ -9,7 +9,7 @@ This repository contains a Python script that parses T-Mobile bills and sends a 
 2. Make the .env file with the password, numbers, and emails addresses you care about
 3. Modify the config if necessary
 
-Now you can either download docker and build and run a docker image or simply create a virtual environment with requirements.txt file and then run the main.py file to test.
+Now you can simply create a virtual environment with requirements.txt file and then run the main.py file to test.
 Follow the tutorials linked below to set it up automatically using any free tool.
 
 ## Components

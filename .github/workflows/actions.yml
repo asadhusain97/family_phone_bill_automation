@@ -2,7 +2,7 @@ name: Phone bill parser
 
 on:
   schedule:
-    - cron: '*/5 * * * *' # At 00:00 on Monday
+    - cron: '0 0 3 * *' # https://crontab.guru/#0_0_3_*_*
 
 jobs:
   build:
