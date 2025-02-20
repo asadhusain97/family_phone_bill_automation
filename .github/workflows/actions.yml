@@ -1,0 +1,32 @@
+name: Phone bill parser
+
+on:
+  schedule:
+    - cron: '0 /3 * * *' # At 00:00 on Monday
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: checkout repo content
+        uses: actions/checkout@v4 # checkout the repository content to github runner
+
+      - name: setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9' # install the python version needed
+          
+      - name: install python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: execute py script # run main.py
+        env:
+          USER: ${{ secrets.USER }}
+          GAPP_PASSWORD: ${{ secrets.GAPP_PASSWORD }}
+          TRIGGER_MAIL_SENDER: ${{ secrets.TRIGGER_MAIL_SENDER }}
+          SUMMARY_EMAIL_RECIPIENT: ${{ secrets.SUMMARY_EMAIL_RECIPIENT }}
+          MEMBER_NAMES: ${{ secrets.MEMBER_NAMES }}
+        run: python3 main.py
