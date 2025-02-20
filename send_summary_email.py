@@ -34,7 +34,7 @@ def read_summary_file(file_path):
         max_key_length = max(df[df.columns[0]].astype(str).apply(len))
         max_value_length = 6
         middle_dots = 10
-        total_width = max_key_length + max_value_length + middle_dots  # Adjust spacing for dots
+        total_width = max_key_length + max_value_length + middle_dots + 7  # Adjust spacing for dots
         
         # Formatting table with dotted lines, ensuring right alignment for second column
         formatted_table = "\n".join(
