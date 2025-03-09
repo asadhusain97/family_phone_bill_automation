@@ -12,12 +12,15 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 def main():
     logging.info("Getting the bill...")
-    get_bill_from_email()
-    logging.info("Bill analysis started...")
-    analyze_bill()
-    logging.info("Sending you the summary..")
-    send_summary_email()
-    logging.info("Done!")
+    mail_found = get_bill_from_email()
+    if mail_found:
+        logging.info("Bill analysis started...")
+        analyze_bill()
+        logging.info("Sending you the summary..")
+        send_summary_email()
+        logging.info("Done!")
+    else:
+        logging.warning("Skipping the other steps.")
 
 if __name__ == "__main__":
     main()

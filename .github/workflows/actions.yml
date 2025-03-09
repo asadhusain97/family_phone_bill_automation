@@ -2,7 +2,7 @@ name: Phone bill parser
 
 on:
   schedule:
-    - cron: '*/5 * * * *' # every 30 mins
+    - cron: '*/5 * * * *' # every 5 mins
 
 jobs:
   build:
@@ -10,11 +10,6 @@ jobs:
     steps:
       - name: checkout repo content
         uses: actions/checkout@v4 # checkout the repository content to github runner
-
-      - name: setup python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9' # install the python version needed
 
       # change the count in line 27 if you think you will mail twice in a day
       - name: check last run date
@@ -35,6 +30,12 @@ jobs:
           else
             echo "count_exceeded=false" >> $GITHUB_OUTPUT
           fi
+
+      - name: setup python
+        if: steps.mail_limit_check.outputs.count_exceeded == 'false'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9' # install the python version needed
 
       - name: install python packages
         if: steps.mail_limit_check.outputs.count_exceeded == 'false'

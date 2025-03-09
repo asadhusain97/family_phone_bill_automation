@@ -95,11 +95,14 @@ def get_bill_from_email():
         if email_ids:
             logging.info(f"Found {len(email_ids)} matching email(s). Fetching the latest one...")
             fetch_and_process_email(mail, email_ids[-1])
+            logging.info("Logging out and closing the connection.")
+            mail.logout()
+            return True
         else:
             logging.info("No emails matched the search criteria.")
-
-        logging.info("Logging out and closing the connection.")
-        mail.logout()
+            logging.info("Logging out and closing the connection.")
+            mail.logout()
+            return False
 
     except Exception as e:
         logging.error(f"Error: {e}")
