@@ -1,6 +1,14 @@
 # family_phone_bill_automation
 
-This repository contains a Python script that parses T-Mobile bills and sends a summary email to a designated recipient. The script uses the imaplib library to connect to an IMAP email server, retrieve the latest bill email, and extract the relevant information. The extracted data is then used to generate a summary email, which is sent using the smtplib library.
+### What is this
+This repository contains a Python script that parses T-Mobile bills and sends a summary email to a designated recipient. The repository is designed to be used with an email having a specific subject line and sent from a specific email address that has the standard bill as an attachment (see the mock bill in the attachments folder) and the summary email is then sent to the specified emails. It runs every 30 mins automatically through github actions and can run for limited number of times per day (set as 1 for now). 
+
+### How I use it
+I get the bill from the T-mobile app and send it to the receiving email address with the specific subject and then wait for max. 30 minutes until I get back the summary result for splitting the bill.
+
+### How is this made
+The script uses the imaplib library to connect to an IMAP email server, retrieve the latest bill email, and extract the relevant information. The extracted data is then used to generate a summary email, which is sent using the smtplib library.
+
 
 ## How to
 1. Get the gmail app password
@@ -23,8 +31,8 @@ text as a pandas dataframe and performs the operations to summarize the bill.
 - main.py: Entrypoint to the app which calls all of the above scripts.
 
 ## Considerations
-I hosted this app on a free online python cloud compute platform like Github Actions or [pythonanywhere.com](https://www.pythonanywhere.com/), and made it to run chronologically every month. It makes it easy to split the bill.
-The repository is designed to be used with a T-Mobile bill email that has the standard bill as an attachment (see the mock bill in the attachments folder), and may require modifications to work with other types of emails.
+I hosted this app on a free online python cloud compute platform like Github Actions or [pythonanywhere.com](https://www.pythonanywhere.com/). It makes it easy to split the bill.
+Make sure to check the env, config, and actions file before adapting this.
 
 ## Shout outs
 If you want to learn follow these videos/channels to do more such automation. 
