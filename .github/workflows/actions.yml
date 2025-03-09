@@ -48,7 +48,6 @@ jobs:
         env:
           USER: ${{ secrets.USER }}
           GAPP_PASSWORD: ${{ secrets.GAPP_PASSWORD }}
-          TRIGGER_MAIL_SENDER: ${{ secrets.TRIGGER_MAIL_SENDER }}
           SUMMARY_EMAIL_RECIPIENT: ${{ secrets.SUMMARY_EMAIL_RECIPIENT }}
           MEMBER_NAMES: ${{ secrets.MEMBER_NAMES }}
         run: python3 main.py
@@ -62,11 +61,17 @@ jobs:
           fi
           python -c "import json; data = json.load(open('mail_sent_counter.json')); data['$TODAY'] = data.get('$TODAY', 0) + 1; json.dump(data, open('mail_sent_counter.json', 'w'))"
 
-      - name: commit changes
+      - name: commit files
         if: steps.mail_limit_check.outputs.count_exceeded == 'false'
         run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git add mail_sent_counter.json
-          git commit -m "Update mail_sent_counter.json"
-          git push
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git diff-index --quiet HEAD || (git commit -a -m "updated counter" --allow-empty)
+          
+      - name: push changes
+        if: steps.mail_limit_check.outputs.count_exceeded == 'false'
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main 
