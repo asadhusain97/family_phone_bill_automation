@@ -47,15 +47,18 @@ def read_summary_file(file_path):
         logging.error(f"Error reading CSV file: {e}")
         return "Error reading CSV file."
 
-def send_email(sender_email, sender_password, recipient_email, subject, body):
+def send_email(sender_email, sender_password, recipient_emails, subject, body):
     """Sends an email with the CSV content in the body."""
     logging.info("Setting up the email message")
     
     msg = EmailMessage()
     msg['From'] = sender_email
-    msg['To'] = recipient_email
     msg['Subject'] = subject
     msg.set_content(body)
+    
+    # Split the recipient_emails string by comma and add each email to the 'To' field
+    for email in recipient_emails.split(','):
+        msg['To'] = email.strip()
     
     try:
         logging.info("Connecting to email server")

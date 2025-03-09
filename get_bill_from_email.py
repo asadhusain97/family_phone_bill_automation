@@ -41,11 +41,11 @@ def connect_to_mailbox(yaml_data, user=USER, password=PASSWORD):
     return mail
 
 
-def search_emails(mail, sender, subject, lookback_days):
+def search_emails(mail, subject, lookback_days):
     today = pd.Timestamp('today')
     days_since = (today - pd.Timedelta(days=lookback_days)).strftime('%d-%b-%Y')
-    logging.info(f"Searching for emails from {sender} with subject '{subject}' since {days_since}...")
-    search_criteria = f'(FROM "{sender}" SUBJECT "{subject}" SINCE "{days_since}")'
+    logging.info(f"Searching for emails with subject '{subject}' since {days_since}...")
+    search_criteria = f'(SUBJECT "{subject}" SINCE "{days_since}")'
     status, messages = mail.search(None, search_criteria)
     if status != "OK":
         logging.warning("No emails found matching the criteria.")
@@ -82,7 +82,7 @@ def fetch_and_process_email(mail, email_id):
                         logging.info(f"Attachment saved: {filepath}")
 
 
-def get_bill_from_email(trigger_mail_sender=TRIGGER_MAIL_SENDER):
+def get_bill_from_email():
     yaml_file = 'configs.yml'
     yaml_data = read_yaml_file(yaml_file)
     if not yaml_data:
@@ -91,7 +91,7 @@ def get_bill_from_email(trigger_mail_sender=TRIGGER_MAIL_SENDER):
     try:
         mail = connect_to_mailbox(yaml_data)
 
-        email_ids = search_emails(mail, trigger_mail_sender, yaml_data["subject"], yaml_data["lookback_days"])
+        email_ids = search_emails(mail, yaml_data["subject"], yaml_data["lookback_days"])
         if email_ids:
             logging.info(f"Found {len(email_ids)} matching email(s). Fetching the latest one...")
             fetch_and_process_email(mail, email_ids[-1])
