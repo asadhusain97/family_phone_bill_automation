@@ -61,3 +61,12 @@ jobs:
             echo "{}" > mail_sent_counter.json
           fi
           python -c "import json; data = json.load(open('mail_sent_counter.json')); data['$TODAY'] = data.get('$TODAY', 0) + 1; json.dump(data, open('mail_sent_counter.json', 'w'))"
+
+      - name: commit changes
+        if: steps.mail_limit_check.outputs.count_exceeded == 'false'
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add mail_sent_counter.json
+          git commit -m "Update mail_sent_counter.json"
+          git push
