@@ -14,12 +14,6 @@ USER = os.environ.get("USER")
 PASSWORD = os.environ.get("GAPP_PASSWORD")
 RECIPIENT_EMAIL = os.environ.get("SUMMARY_EMAIL_RECIPIENT")
 
-MAX_EMAILS = os.environ.get("MAX_EMAILS_PER_DAY")  # Set the maximum number of emails allowed per day
-
-# Ensure the directory for the log file exists
-LOG_DIR = os.path.dirname(os.path.abspath('mail_sent_counter.json'))
-if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR)
 
 def read_yaml_file(file_path):
     """Reads and parses a YAML file."""
@@ -56,39 +50,8 @@ def read_summary_file(file_path):
         logging.error(f"Error reading CSV file: {e}")
         return "Error reading CSV file."
 
-def read_email_log():
-    """Reads the email log file to track the number of emails sent."""
-    if os.path.exists('mail_sent_counter.json'):
-        try:
-            with open('mail_sent_counter.json', 'r') as file:
-                return json.load(file)
-        except json.JSONDecodeError:
-            logging.error("Error decoding JSON from mail_sent_counter.json. Returning empty log.")
-            return {}
-    return {}
-
-def write_email_log(log_data):
-    """Writes the email log data to the log file."""
-    with open('mail_sent_counter.json', 'w') as file:
-        json.dump(log_data, file)
-
-def can_send_email():
-    """Checks if the number of emails sent today is within the allowed limit."""
-    log_data = read_email_log()
-    today = datetime.now().strftime('%Y-%m-%d')
-    if today not in log_data:
-        log_data[today] = 0
-    if log_data[today] < int(MAX_EMAILS):
-        log_data[today] += 1
-        write_email_log(log_data)
-        return True
-    return False
-
 def send_email(sender_email, sender_password, recipient_emails, subject, body):
     """Sends an email with the CSV content in the body."""
-    if not can_send_email():
-        logging.error("Max email limit reached for today.")
-        return
 
     logging.info("Setting up the email message")
     
