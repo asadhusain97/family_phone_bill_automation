@@ -4,6 +4,8 @@ import yaml
 import pandas as pd
 from email.message import EmailMessage
 import os
+import json
+from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -11,6 +13,13 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 USER = os.environ.get("USER")
 PASSWORD = os.environ.get("GAPP_PASSWORD")
 RECIPIENT_EMAIL = os.environ.get("SUMMARY_EMAIL_RECIPIENT")
+
+MAX_EMAILS = os.environ.get("MAX_EMAILS_PER_DAY")  # Set the maximum number of emails allowed per day
+
+# Ensure the directory for the log file exists
+LOG_DIR = os.path.dirname(os.path.abspath('mail_sent_counter.json'))
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR)
 
 def read_yaml_file(file_path):
     """Reads and parses a YAML file."""
@@ -47,8 +56,40 @@ def read_summary_file(file_path):
         logging.error(f"Error reading CSV file: {e}")
         return "Error reading CSV file."
 
+def read_email_log():
+    """Reads the email log file to track the number of emails sent."""
+    if os.path.exists('mail_sent_counter.json'):
+        try:
+            with open('mail_sent_counter.json', 'r') as file:
+                return json.load(file)
+        except json.JSONDecodeError:
+            logging.error("Error decoding JSON from mail_sent_counter.json. Returning empty log.")
+            return {}
+    return {}
+
+def write_email_log(log_data):
+    """Writes the email log data to the log file."""
+    with open('mail_sent_counter.json', 'w') as file:
+        json.dump(log_data, file)
+
+def can_send_email():
+    """Checks if the number of emails sent today is within the allowed limit."""
+    log_data = read_email_log()
+    today = datetime.now().strftime('%Y-%m-%d')
+    if today not in log_data:
+        log_data[today] = 0
+    if log_data[today] < int(MAX_EMAILS):
+        log_data[today] += 1
+        write_email_log(log_data)
+        return True
+    return False
+
 def send_email(sender_email, sender_password, recipient_emails, subject, body):
     """Sends an email with the CSV content in the body."""
+    if not can_send_email():
+        logging.error("Max email limit reached for today.")
+        return
+
     logging.info("Setting up the email message")
     
     msg = EmailMessage()
@@ -57,8 +98,8 @@ def send_email(sender_email, sender_password, recipient_emails, subject, body):
     msg.set_content(body)
     
     # Split the recipient_emails string by comma and add each email to the 'To' field
-    for email in recipient_emails.split(','):
-        msg['To'] = email.strip()
+    recipient_list = [email.strip() for email in recipient_emails.split(',')]
+    msg['To'] = ', '.join(recipient_list)
     
     try:
         logging.info("Connecting to email server")
@@ -69,7 +110,6 @@ def send_email(sender_email, sender_password, recipient_emails, subject, body):
             logging.info("Email sent successfully")
     except Exception as e:
         logging.error(f"Error sending email: {e}")
-
 
 def delete_all_files_in_folder(folder_path):
     # Check if the folder exists
@@ -90,7 +130,6 @@ def delete_all_files_in_folder(folder_path):
                 logging.ERROR(f"Error deleting {file_path}: {e}")
         else:
             logging.info(f"Skipped (not a file): {file_path}")
-
 
 def send_summary_email(user = USER, password = PASSWORD, recipient_email = RECIPIENT_EMAIL):
     """Sends a formatted summary mail to the recipient."""
