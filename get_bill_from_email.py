@@ -8,7 +8,9 @@ import yaml
 import pandas as pd
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 # Create a folder to save attachments
 ATTACHMENT_DIR = "attachments"
@@ -19,11 +21,12 @@ USER = os.environ.get("USER")
 PASSWORD = os.environ.get("GAPP_PASSWORD")
 TRIGGER_MAIL_SENDER = os.environ.get("TRIGGER_MAIL_SENDER")
 
+
 def read_yaml_file(file_path):
     """Reads and parses a YAML file."""
     logging.info(f"Reading YAML file from {file_path}")
     try:
-        with open(file_path, 'r') as file:
+        with open(file_path, "r") as file:
             data = yaml.safe_load(file)
             logging.info("YAML file read successfully")
             return data
@@ -42,10 +45,10 @@ def connect_to_mailbox(yaml_data, user=USER, password=PASSWORD):
 
 
 def search_emails(mail, subject, lookback_days):
-    today = pd.Timestamp('today')
-    days_since = (today - pd.Timedelta(days=lookback_days)).strftime('%d-%b-%Y')
+    today = pd.Timestamp("today")
+    days_since = (today - pd.Timedelta(days=lookback_days)).strftime("%d-%b-%Y")
     logging.info(f"Searching for emails with subject '{subject}' since {days_since}...")
-    search_criteria = f'(SUBJECT "{subject}" SINCE "{days_since}")'
+    search_criteria = f'(SUBJECT "{subject.lower()}" SINCE "{days_since}")'
     status, messages = mail.search(None, search_criteria)
     if status != "OK":
         logging.warning("No emails found matching the criteria.")
@@ -83,7 +86,7 @@ def fetch_and_process_email(mail, email_id):
 
 
 def get_bill_from_email():
-    yaml_file = 'configs.yml'
+    yaml_file = "configs.yml"
     yaml_data = read_yaml_file(yaml_file)
     if not yaml_data:
         return
@@ -91,9 +94,13 @@ def get_bill_from_email():
     try:
         mail = connect_to_mailbox(yaml_data)
 
-        email_ids = search_emails(mail, yaml_data["subject"], yaml_data["lookback_days"])
+        email_ids = search_emails(
+            mail, yaml_data["subject"], yaml_data["lookback_days"]
+        )
         if email_ids:
-            logging.info(f"Found {len(email_ids)} matching email(s). Fetching the latest one...")
+            logging.info(
+                f"Found {len(email_ids)} matching email(s). Fetching the latest one..."
+            )
             fetch_and_process_email(mail, email_ids[-1])
             logging.info("Logging out and closing the connection.")
             mail.logout()
@@ -106,6 +113,7 @@ def get_bill_from_email():
 
     except Exception as e:
         logging.error(f"Error: {e}")
+
 
 if __name__ == "__main__":
     get_bill_from_email()

@@ -1,6 +1,6 @@
 # filter to find the mails in this criteria and read the latest one
-subject: "Split this!" # mail should have this subject
-lookback_days: 1 # ex. 4,7,.. any mail after this date will be read
+subject: "split this!" # mail should have this subject
+lookback_days: 0 # ex. 4,7,.. any mail after this date will be read
 
 # send summary mail
 summary_subject: "T-Mobile bill total per person"
@@ -10,7 +10,7 @@ table_top_crop: 240 # mostly fixed, removes the header of the pdf
 table_bottom_crop: 760 # good for 10 members, adjust according to ~40 px per member
 
 # divide the total plan cost between all members
-# alternate is to only divide plan cost for included members and new members pay full $40
+# alternate is to only divide plan cost for included members and new members pay full for themselves
 plan_cost_for_all_members: True
 
 # delete attachments after run completes
@@ -18,4 +18,5 @@ delete_attachments: True
 
 # Paths
 bill_path: "attachments/tmobile_bill.pdf"
+page_number: 1
 summarized_bill_path: "attachments/summary.csv"
