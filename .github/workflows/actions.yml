@@ -19,7 +19,7 @@ jobs:
           if [ -f mail_sent_counter.json ]; then
             if grep -q "$TODAY" mail_sent_counter.json; then
               COUNT=$(jq -r --arg date "$TODAY" '.[$date] // 0' mail_sent_counter.json)
-              if [ "$COUNT" -gt 1 ]; then
+              if [ "$COUNT" -lt 1 ]; then
                 echo "count_exceeded=true" >> $GITHUB_OUTPUT
               else
                 echo "count_exceeded=false" >> $GITHUB_OUTPUT
