@@ -85,7 +85,7 @@ def fetch_and_process_email(mail, email_id):
                         logging.info(f"Attachment saved: {filepath}")
 
 
-def get_bill_from_email():
+def main():
     yaml_file = "configs.yml"
     yaml_data = read_yaml_file(yaml_file)
     if not yaml_data:
@@ -116,4 +116,4 @@ def get_bill_from_email():
 
 
 if __name__ == "__main__":
-    get_bill_from_email()
+    main()

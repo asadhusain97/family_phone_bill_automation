@@ -109,8 +109,12 @@ def send_email(sender_email, sender_password, recipient_emails, subject, body):
         ) as server:  # Use your email provider's SMTP settings
             server.login(sender_email, sender_password)
             logging.info("Logged into email server")
-            server.send_message(msg)
-            logging.info("Email sent successfully")
+            server.sendmail(
+                sender_email,
+                recipient_list,
+                msg.as_string()
+            )
+            logging.info(f"Email sent to {len(recipient_list)} recipients")
     except Exception as e:
         logging.error(f"Error sending email: {e}")
 
@@ -136,7 +140,7 @@ def delete_all_files_in_folder(folder_path):
             logging.info(f"Skipped (not a file): {file_path}")
 
 
-def send_summary_email(user=USER, password=PASSWORD, recipient_email=RECIPIENT_EMAIL):
+def main(user=USER, password=PASSWORD, recipient_email=RECIPIENT_EMAIL):
     """Sends a formatted summary mail to the recipient."""
     yaml_file = "configs.yml"
     yaml_data = read_yaml_file(yaml_file)
@@ -160,4 +164,4 @@ def send_summary_email(user=USER, password=PASSWORD, recipient_email=RECIPIENT_E
 
 
 if __name__ == "__main__":
-    send_summary_email()
+    main()

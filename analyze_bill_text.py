@@ -277,7 +277,7 @@ def save_dataframe(df, file_path):
         logging.error(f"Error saving DataFrame: {e}")
 
 
-def analyze_bill():
+def main():
     yaml_file = "configs.yml"
     yaml_data = read_yaml_file(yaml_file)
     if not yaml_data:
@@ -303,4 +303,4 @@ def analyze_bill():
 
 
 if __name__ == "__main__":
-    analyze_bill()
+    main()
