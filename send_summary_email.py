@@ -73,11 +73,8 @@ def read_summary_file(file_path):
         table = tabulate(
             df,
             headers="keys",
-            tablefmt="plain",
-            stralign="left",
-            numalign="right",
+            tablefmt="simple",
             showindex=True,
-            maxcolwidths=[25, 15, 15, 15, 15, 15],
         )
 
         # Add total summary
