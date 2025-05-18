@@ -6,7 +6,7 @@ This repository contains a Python script that parses T-Mobile bills and sends a 
 
 ### How I use it
 
-I get the bill from the T-mobile app and send it to the receiving email address with the specific subject and then wait for max. 30 minutes until I get back the summary result for splitting the bill.
+I get the bill from the T-mobile app and send it to the receiving email address (asadeveloper10) with the specific subject (stock) and then wait. Every day at 12, the cron job runs and I get back the summary result for splitting the bill in the set email addresses.
 
 ### How is this made
 

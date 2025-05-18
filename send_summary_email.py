@@ -68,6 +68,9 @@ def read_summary_file(file_path):
                 "one_time_charges": "One-Time Charges",
             }
         )
+        
+        # select columns to return
+        df = df[["Member", "Total"]]
 
         # Create formatted table
         table = tabulate(
@@ -150,11 +153,11 @@ def main(user=USER, password=PASSWORD, recipient_email=RECIPIENT_EMAIL):
     csv_content = read_summary_file(yaml_data["summarized_bill_path"])
 
     summary_body = f"""
-        Here is how much each member of the family owes for last months' 
-        T-Mobile bill:
-        \n\n{csv_content}\n\n
-        Have a good day beautiful!
-        """
+    Here is how much each member of the family owes for last months' 
+    T-Mobile bill:
+    \n\n{csv_content}\n\n
+    Have a good day beautiful!
+    """
 
     send_email(
         user, password, recipient_email, yaml_data["summary_subject"], summary_body
