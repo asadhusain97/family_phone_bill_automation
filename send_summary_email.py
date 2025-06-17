@@ -149,12 +149,17 @@ def main(user=USER, password=PASSWORD, recipient_email=RECIPIENT_EMAIL):
     yaml_data = read_yaml_file(yaml_file)
     if not yaml_data:
         return
+    
+    # read bill month name
+    with open("billing_month.txt", "r") as f:
+        bill_month = f.read().strip()
+        if not bill_month:
+            bill_month = "last month"
 
     csv_content = read_summary_file(yaml_data["summarized_bill_path"])
 
     summary_body = f"""
-    Here is how much each member of the family owes for last months' 
-    T-Mobile bill:
+    Here is how much each member of the family owes for {bill_month}'s T-Mobile bill:
     \n\n{csv_content}\n\n
     Have a good day beautiful!
     """

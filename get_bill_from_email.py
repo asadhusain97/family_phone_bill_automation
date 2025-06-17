@@ -46,14 +46,22 @@ def connect_to_mailbox(yaml_data, user=USER, password=PASSWORD):
 
 def search_emails(mail, subject, lookback_days):
     today = pd.Timestamp("today")
-    days_since = (today - pd.Timedelta(days=lookback_days)).strftime("%d-%b-%Y")
-    logging.info(f"Searching for emails with subject '{subject}' since {days_since}...")
-    search_criteria = f'(SUBJECT "{subject.lower()}" SINCE "{days_since}")'
-    status, messages = mail.search(None, search_criteria)
+    since_date = (today - pd.Timedelta(days=lookback_days)).strftime("%d-%b-%Y")
+    logging.info(f"Searching for emails since {since_date}...")
+    status, messages = mail.search(None, f'SINCE {since_date}')
     if status != "OK":
         logging.warning("No emails found matching the criteria.")
         return []
-    return messages[0].split()
+    email_ids = messages[0].split()
+    matched_ids = []
+    for eid in email_ids:
+        status, msg_data = mail.fetch(eid, "(BODY.PEEK[HEADER.FIELDS (SUBJECT)])")
+        if status == "OK":
+            msg = email.message_from_bytes(msg_data[0][1])
+            subj = msg.get("Subject", "")
+            if subject.lower() in subj.lower():
+                matched_ids.append(eid)
+    return matched_ids
 
 
 def save_attachment(part, directory):

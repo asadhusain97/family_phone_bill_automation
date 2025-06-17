@@ -82,6 +82,32 @@ def get_num_from_str(s: str) -> float:
         return s
 
 
+def get_bill_month(doc, page_number=0):
+    """
+    Extracts the billing month from the specified page of the PDF document.
+    Looks for the text after "Here's your bill for ".
+
+    Args:
+        doc: PyMuPDF document object
+        page_number: Page number to extract from (default: 0)
+
+    Returns:
+        str: Billing month string if found, else None
+    """
+    page = doc.load_page(page_number)
+    text = page.get_text("text")
+    match = re.search(r"Here's your bill for\s+([^\n]+)", text)
+    if match:
+        bill_month = match.group(1).strip()[:-1]  # Remove trailing period and spaces
+        # save month name to a txt file
+        with open("billing_month.txt", "w") as f:
+            f.write(bill_month)
+        logging.info(f"Billing month extracted: {bill_month}")
+    else:
+        logging.error("Billing month not found in the document")
+        return None
+
+
 def get_summary_table_from_pdf(path, page_number) -> pd.DataFrame:
     """Extracts and structures the billing summary table from a specific PDF page.
 
@@ -119,6 +145,7 @@ def get_summary_table_from_pdf(path, page_number) -> pd.DataFrame:
         logging.info(f"Getting summary table from page {page_number} of PDF")
 
         # Select the page
+        get_bill_month(doc, 0)
         page = doc.load_page(page_number)
 
         # Extract text
