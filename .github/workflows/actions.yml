@@ -2,7 +2,7 @@ name: Phone bill parser
 
 on:
   schedule:
-    - cron: "0 */6 * * *" # every 6 hours
+    - cron: "0 */12 * * *" # every 12 hours
 
 jobs:
   build:
@@ -19,7 +19,7 @@ jobs:
           if [ -f mail_sent_counter.json ]; then
             if grep -q "$TODAY" mail_sent_counter.json; then
               COUNT=$(jq -r --arg date "$TODAY" '.[$date] // 0' mail_sent_counter.json)
-              if [ "$COUNT" -ge 1 ]; then
+              if [ "$COUNT" -ge 2 ]; then
                 echo "count_exceeded=true" >> $GITHUB_OUTPUT
               else
                 echo "count_exceeded=false" >> $GITHUB_OUTPUT
