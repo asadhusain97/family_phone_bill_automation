@@ -1,6 +1,6 @@
 # filter to find the mails in this criteria and read the latest one
 subject: "BillSummary" # mail should have this subject
-lookback_days: 0 # ex. 4,7,.. any mail after this date will be read
+lookback_days: 1 # ex. 4,7,.. any mail between today and today - lookback days will be read
 
 # send summary mail
 summary_subject: "T-Mobile bill total per person"
