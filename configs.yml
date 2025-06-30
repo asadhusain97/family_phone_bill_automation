@@ -8,6 +8,7 @@ summary_subject: "T-Mobile bill total per person"
 # crop summary table form pdf
 table_top_crop: 240 # mostly fixed, removes the header of the pdf
 table_bottom_crop: 760 # good for 10 members, adjust according to ~40 px per member
+family_count: 10 # number of family members in the plan, used to crop the table
 
 # divide the total plan cost between all members
 # alternate is to only divide plan cost for included members and new members pay full for themselves

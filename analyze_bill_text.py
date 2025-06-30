@@ -108,7 +108,7 @@ def get_bill_month(doc, page_number=0):
         return None
 
 
-def get_summary_table_from_pdf(path, page_number) -> pd.DataFrame:
+def get_summary_table_from_pdf(path, page_number, family_cnt) -> pd.DataFrame:
     """Extracts and structures the billing summary table from a specific PDF page.
 
     Processes T-Mobile PDF bills to locate and parse the account summary table containing
@@ -117,6 +117,7 @@ def get_summary_table_from_pdf(path, page_number) -> pd.DataFrame:
     Args:
         path: Path to PDF file containing phone bill
         page_number: Zero-based page index containing summary table (typically page 1)
+        family_cnt: Number of family members in the plan, used to crop the table
 
     Returns:
         pd.DataFrame: Structured table with columns:
@@ -164,7 +165,21 @@ def get_summary_table_from_pdf(path, page_number) -> pd.DataFrame:
         tbl_list = data[tbl_start_idx : tbl_end_idx + 1]
 
         # convert to numpy and reshape
-        tbl_arr = np.array(tbl_list).reshape(11, 7)
+        # check if the table selection is valid
+        if len(tbl_list) % (family_cnt+1) != 0:
+            logging.error(
+                f"Table length {len(tbl_list)} is not divisible by family count {family_cnt}"
+            )
+            raise ValueError("Invalid table format - inconsistent row count")
+        else:
+            # Make sure table is ready to be reshaped to have 7 columns
+            new_tbl_list = tbl_list.copy()
+            num_cols = int(len(tbl_list) / (family_cnt + 1))
+            while num_cols < 7:
+                new_tbl_list = add_elements_in_list(new_tbl_list, num_cols, ["-"]*(family_cnt + 1))
+                num_cols = int(len(new_tbl_list) / (family_cnt + 1))
+
+        tbl_arr = np.array(new_tbl_list).reshape(11, 7)
 
         # get the raw table
         raw_df = pd.DataFrame(
@@ -184,6 +199,17 @@ def get_summary_table_from_pdf(path, page_number) -> pd.DataFrame:
     except Exception as e:
         logging.error(f"Error extracting summary table from PDF: {e}")
         return None
+
+
+def add_elements_in_list(data, group_size, new_elements):
+    n = len(data) // group_size
+    result = []
+    for i in range(n):
+        group = data[i * group_size : (i + 1) * group_size]
+        insert_index = len(group) - 1  # second-last index
+        group.insert(insert_index, new_elements[i])
+        result.append(group)
+    return list(np.array(result).flatten())
 
 
 def process_text_to_dataframe(df, plan_cost_for_all_members):
@@ -312,7 +338,7 @@ def main():
 
     # read the table from the pdf
     raw_df = get_summary_table_from_pdf(
-        yaml_data["bill_path"], yaml_data["page_number"]
+        yaml_data["bill_path"], yaml_data["page_number"], yaml_data["family_count"]
     )
 
     # process the table
