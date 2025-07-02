@@ -2,6 +2,8 @@
 
 ### What is this
 
+Learn more [here](https://asadhusain97.github.io/projects/mobilefamilybill.html)
+
 This repository contains a Python script that parses T-Mobile bills and sends a summary email to a designated recipient. The repository is designed to be used with an email having a specific subject line and sent from a specific email address that has the standard bill as an attachment (see the mock bill in the attachments folder) and the summary email is then sent to the specified emails. It runs every 30 mins automatically through github actions and can run for limited number of times per day (set as 1 for now).
 
 ### How I use it
