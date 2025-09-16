@@ -2,7 +2,7 @@ name: Phone bill parser
 
 on:
   schedule:
-    - cron: "*/2 * * * *" # every 2 mins
+    - cron: "0 */12 * * *" # every 12 hrs
 
 jobs:
   build:
