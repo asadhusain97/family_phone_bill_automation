@@ -4,7 +4,7 @@ import logging
 import yaml
 import pandas as pd  # Import pandas first
 from pandas.errors import SettingWithCopyWarning
-import fitz  # PyMuPDF
+from pypdf import PdfReader  # Pure Python PDF library (iOS a-Shell compatible)
 import numpy as np
 import re
 import warnings
@@ -59,12 +59,12 @@ def find_nth_occurrence(strings: list, target: str, n: int = 1) -> int:
 
 
 def get_num_from_str(s: str) -> float:
-    """Convert currency strings to floats while handling edge cases.
+    r"""Convert currency strings to floats while handling edge cases.
 
     Examples:
         get_num_from_str("-$280.83") → -280.83
-        get_num_from_str("\$1,234.56") → 1234.56
-        get_num_from_str("-") → "-"
+        get_num_from_str("$1,234.56") → 1234.56
+        get_num_from_str("-") → 0.0
     """
     match = re.search(r"[-+]?\$?\d{1,4}(?:,\d{3})*(\.\d+)?", str(s))
 
@@ -82,20 +82,20 @@ def get_num_from_str(s: str) -> float:
         return s
 
 
-def get_bill_month(doc, page_number=0):
+def get_bill_month(reader, page_number=0):
     """
     Extracts the billing month from the specified page of the PDF document.
     Looks for the text after "Here's your bill for ".
 
     Args:
-        doc: PyMuPDF document object
+        reader: pypdf PdfReader object
         page_number: Page number to extract from (default: 0)
 
     Returns:
         str: Billing month string if found, else None
     """
-    page = doc.load_page(page_number)
-    text = page.get_text("text")
+    page = reader.pages[page_number]
+    text = page.extract_text()
     match = re.search(r"Here's your bill for\s+([^\n]+)", text)
     if match:
         bill_month = match.group(1).strip()[:-1]  # Remove trailing period and spaces
@@ -108,6 +108,36 @@ def get_bill_month(doc, page_number=0):
         return None
 
 
+def parse_table_row(row):
+    """Parse a single table row from pypdf extracted text.
+
+    Args:
+        row: Single line string from the bill summary table
+
+    Returns:
+        list: Parsed row with 7 elements [cell_nums, line_type, plans, equipment, services, one_time, total]
+        None if parsing fails
+    """
+    if row.startswith('Account'):
+        # Account row: "Account $280.00 - $0.00 - $280.00"
+        parts = row.split()
+        if len(parts) >= 6:
+            return ['Account', '', parts[1], parts[2], parts[3], parts[4], parts[5]]
+    else:
+        # Member row: "(999) 637-3009 Voice Included - - $0.53 $0.53"
+        # Extract phone number and parse rest
+        match = re.match(r'\((\d+)\)\s*(\d+)-(\d+)\s+Voice\s+(.+)', row)
+        if match:
+            phone = f"({match.group(1)}) {match.group(2)}-{match.group(3)}"
+            rest = match.group(4).strip()
+
+            # Parse remaining fields: Plans Equipment Services One-time Total
+            tokens = rest.split()
+            if len(tokens) >= 5:
+                return [phone, 'Voice'] + tokens
+    return None
+
+
 def get_summary_table_from_pdf(path, page_number, family_cnt) -> pd.DataFrame:
     """Extracts and structures the billing summary table from a specific PDF page.
 
@@ -117,7 +147,7 @@ def get_summary_table_from_pdf(path, page_number, family_cnt) -> pd.DataFrame:
     Args:
         path: Path to PDF file containing phone bill
         page_number: Zero-based page index containing summary table (typically page 1)
-        family_cnt: Number of family members in the plan, used to crop the table
+        family_cnt: Number of family members in the plan, used to validate table
 
     Returns:
         pd.DataFrame: Structured table with columns:
@@ -130,60 +160,61 @@ def get_summary_table_from_pdf(path, page_number, family_cnt) -> pd.DataFrame:
             - total: Line item total
         Returns None if extraction fails
 
-    Example:
-        >>> df = get_summary_table_from_pdf("verizon_bill.pdf", 1)
-        >>> df[['cell_nums', 'total']].head()
-           cell_nums   total
-        0  123-456-7890  $80.00
-        1  234-567-8901  $40.00
-
     Note:
         - Requires exact page structure matching T-Mobile's billing format
         - Logs extraction errors with full traceback for debugging
+        - Uses pypdf for pure Python PDF parsing (iOS a-Shell compatible)
     """
     try:
-        doc = fitz.open(path)
+        reader = PdfReader(path)
         logging.info(f"Getting summary table from page {page_number} of PDF")
 
-        # Select the page
-        get_bill_month(doc, 0)
-        page = doc.load_page(page_number)
+        # Extract billing month from first page
+        get_bill_month(reader, 0)
+
+        # Select the page for table extraction
+        page = reader.pages[page_number]
 
         # Extract text
-        text = page.get_text("text")
+        text = page.extract_text()
 
         # Split text into lines and process
         lines = text.split("\n")
-        data = [line for line in lines if line.strip() != ""]
+        data = [line.strip() for line in lines if line.strip() != ""]
 
-        # find the start and end of the table
-        tbl_start_idx = find_nth_occurrence(data, "Account", 2)
-        tbl_end_idx = find_nth_occurrence(data, "DETAILED CHARGES", 1)
+        # Find the table boundaries
+        # Table starts after "THIS BILL SUMMARY" header line
+        # Table ends at "DETAILED CHARGES"
+        try:
+            summary_idx = data.index("THIS BILL SUMMARY")
+            detailed_idx = data.index("DETAILED CHARGES")
+        except ValueError as e:
+            logging.error(f"Could not find table boundaries: {e}")
+            return None
 
-        # add a placeholder to make the table and subset
-        data.insert(tbl_start_idx + 1, "placeholder")
-        tbl_list = data[tbl_start_idx : tbl_end_idx + 1]
+        # Extract table rows (skip header row with column names)
+        table_lines = data[summary_idx + 2 : detailed_idx]  # +2 to skip header row
 
-        # convert to numpy and reshape
-        # check if the table selection is valid
-        if len(tbl_list) % (family_cnt+1) != 0:
-            logging.error(
-                f"Table length {len(tbl_list)} is not divisible by family count {family_cnt}"
+        # Parse each row
+        parsed_rows = []
+        for line in table_lines:
+            if line.startswith('T otals'):  # Skip totals row
+                continue
+            parsed = parse_table_row(line)
+            if parsed:
+                parsed_rows.append(parsed)
+
+        # Validate we got the expected number of rows
+        expected_rows = family_cnt + 1  # family members + Account row
+        if len(parsed_rows) != expected_rows:
+            logging.warning(
+                f"Expected {expected_rows} rows but got {len(parsed_rows)}. "
+                f"Check family_count config setting."
             )
-            raise ValueError("Invalid table format - inconsistent row count")
-        else:
-            # Make sure table is ready to be reshaped to have 7 columns
-            new_tbl_list = tbl_list.copy()
-            num_cols = int(len(tbl_list) / (family_cnt + 1))
-            while num_cols < 7:
-                new_tbl_list = add_elements_in_list(new_tbl_list, num_cols, ["-"]*(family_cnt + 1))
-                num_cols = int(len(new_tbl_list) / (family_cnt + 1))
 
-        tbl_arr = np.array(new_tbl_list).reshape(11, 7)
-
-        # get the raw table
+        # Create DataFrame
         raw_df = pd.DataFrame(
-            tbl_arr,
+            parsed_rows,
             columns=[
                 "cell_nums",
                 "line_type",
@@ -194,22 +225,13 @@ def get_summary_table_from_pdf(path, page_number, family_cnt) -> pd.DataFrame:
                 "total",
             ],
         )
-        logging.info("Summary table successfully extracted from PDF")
+
+        logging.info(f"Summary table successfully extracted from PDF ({len(parsed_rows)} rows)")
         return raw_df
+
     except Exception as e:
-        logging.error(f"Error extracting summary table from PDF: {e}")
+        logging.error(f"Error extracting summary table from PDF: {e}", exc_info=True)
         return None
-
-
-def add_elements_in_list(data, group_size, new_elements):
-    n = len(data) // group_size
-    result = []
-    for i in range(n):
-        group = data[i * group_size : (i + 1) * group_size]
-        insert_index = len(group) - 1  # second-last index
-        group.insert(insert_index, new_elements[i])
-        result.append(group)
-    return list(np.array(result).flatten())
 
 
 def process_text_to_dataframe(df, plan_cost_for_all_members):
@@ -306,13 +328,22 @@ def process_text_to_dataframe(df, plan_cost_for_all_members):
 
 
 def get_total_from_bill(path, page_number=0):
-    doc = fitz.open(path)
+    """Extract the total due amount from the PDF bill.
+
+    Args:
+        path: Path to PDF file
+        page_number: Page number to extract from (default: 0)
+
+    Returns:
+        float: Total bill amount
+    """
+    reader = PdfReader(path)
 
     # Select the page
-    page = doc.load_page(page_number)
+    page = reader.pages[page_number]
 
     # Extract text
-    text = page.get_text("text")
+    text = page.extract_text()
 
     # Split text into lines and process
     lines = text.split("\n")

@@ -10,12 +10,12 @@ This tool takes a T-Mobile bill PDF and outputs a formatted summary showing how 
 
 ## Features
 
-- **PDF Parsing**: Extracts billing data directly from T-Mobile PDF bills using PyMuPDF
+- **PDF Parsing**: Extracts billing data directly from T-Mobile PDF bills using pypdf (pure Python, no C compiler needed)
 - **Smart Cost Allocation**: Two strategies for dividing plan costs
   - Equal split: Divide total plan cost equally among all members
   - Tiered split: Base plan shared among "included" members, others pay their individual rate
 - **Equipment & Services**: Properly attributes device payments and add-on services to each member
-- **iOS Native**: Runs on iPhone via a-Shell terminal app
+- **iOS Native**: Runs on iPhone via a-Shell terminal app (no C dependencies)
 - **Share Sheet Integration**: Process bills instantly from any app using iOS Shortcuts
 - **Clean Output**: Formatted table perfect for saving to Apple Notes or Messages
 
@@ -171,15 +171,15 @@ Each member's final total = their share of plan cost + equipment + services + on
 - **main.py**: Entry point that validates arguments, calls the parser, and formats output
 - **analyze_bill_text.py**: PDF text extraction, table parsing, cost allocation logic
 - **configs.yml**: Family plan configuration (member count, cost strategy)
-- **requirements.txt**: Python dependencies (pandas, numpy, PyMuPDF, pyyaml, tabulate)
+- **requirements.txt**: Python dependencies (pandas, numpy, pypdf, pyyaml, tabulate)
 
 ## Dependencies
 
-All dependencies are iOS a-Shell compatible:
+All dependencies are iOS a-Shell compatible (pure Python, no C compilation):
 
 - **pandas**: Data processing and calculations
 - **numpy**: Numerical operations
-- **PyMuPDF (fitz)**: PDF text extraction
+- **pypdf**: Pure Python PDF text extraction (no C dependencies)
 - **pyyaml**: Configuration file parsing
 - **tabulate**: Table formatting for output
 
@@ -187,11 +187,11 @@ Install via: `pip install -r requirements.txt`
 
 ## Troubleshooting
 
-### "No module named 'fitz'"
-Install PyMuPDF: `pip install pymupdf`
+### "No module named 'pypdf'"
+Install pypdf: `pip install pypdf`
 
-### "Table length not divisible by family count"
-Your `family_count` in `configs.yml` doesn't match the PDF. Check the bill and update the config.
+### "Expected X rows but got Y"
+Your `family_count` in `configs.yml` doesn't match the PDF. Check the bill and update the config to match the actual number of lines on your bill.
 
 ### "PDF file not found"
 Verify the file path. In a-Shell, use `ls` to check file location. Paths are case-sensitive.
@@ -227,7 +227,7 @@ Found a bug or have a feature request? Open an issue or submit a pull request!
 ## Credits
 
 - [a-Shell](https://github.com/holzschu/a-shell) - iOS terminal emulator
-- [PyMuPDF](https://github.com/pymupdf/PyMuPDF) - PDF processing library
+- [pypdf](https://github.com/py-pdf/pypdf) - Pure Python PDF library (no C dependencies)
 - [pandas](https://pandas.pydata.org/) - Data analysis tools
 
 ## License
