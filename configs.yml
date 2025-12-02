@@ -1,23 +1,18 @@
-# filter to find the mails in this criteria and read the latest one
-subject: "BillSummary" # mail should have this subject
-lookback_days: 1 # ex. 4,7,.. any mail between today and today - lookback days will be read
+# T-Mobile Bill Parser Configuration
 
-# send summary mail
-summary_subject: "T-Mobile bill total per person"
+# Family Plan Settings
+family_count: 10  # Number of family members in the plan
 
-# crop summary table form pdf
-table_top_crop: 240 # mostly fixed, removes the header of the pdf
-table_bottom_crop: 760 # good for 10 members, adjust according to ~40 px per member
-family_count: 10 # number of family members in the plan, used to crop the table
-
-# divide the total plan cost between all members
-# alternate is to only divide plan cost for included members and new members pay full for themselves
+# Cost Allocation Strategy
+# True: Split total plan cost equally among all members
+# False: Split base plan among "included" members, charge others their individual plan cost
 plan_cost_for_all_members: True
 
-# delete attachments after run completes
-delete_attachments: True
+# PDF Processing Settings
+page_number: 1  # Page number containing the billing summary table (usually page 1)
 
-# Paths
-bill_path: "attachments/tmobile_bill.pdf"
-page_number: 1
-summarized_bill_path: "attachments/summary.csv"
+# Output Settings
+summarized_bill_path: "attachments/summary.csv"  # Where to save the processed summary
+
+# Note: The bill PDF path is provided as a command-line argument when running the script
+# Example: python main.py /path/to/bill.pdf

@@ -330,22 +330,32 @@ def save_dataframe(df, file_path):
         logging.error(f"Error saving DataFrame: {e}")
 
 
-def main():
+def main(pdf_path=None):
+    """Main function to analyze bill text.
+
+    Args:
+        pdf_path: Optional path to PDF file. If provided, uses this instead of config path.
+                  This enables local mode execution (e.g., iOS a-Shell).
+    """
     yaml_file = "configs.yml"
     yaml_data = read_yaml_file(yaml_file)
     if not yaml_data:
         return
 
+    # Use provided PDF path (local mode) or config path (cloud mode)
+    bill_path = pdf_path if pdf_path else yaml_data["bill_path"]
+    logging.info(f"Processing bill from: {bill_path}")
+
     # read the table from the pdf
     raw_df = get_summary_table_from_pdf(
-        yaml_data["bill_path"], yaml_data["page_number"], yaml_data["family_count"]
+        bill_path, yaml_data["page_number"], yaml_data["family_count"]
     )
 
     # process the table
     df = process_text_to_dataframe(raw_df, yaml_data["plan_cost_for_all_members"])
 
     # check if the processing was fine
-    total_bill_raw = get_total_from_bill(yaml_data["bill_path"])
+    total_bill_raw = get_total_from_bill(bill_path)
     total_bill_processed = float(df.total.sum())
     assert (
         abs(total_bill_processed - total_bill_raw) < 10**-6
