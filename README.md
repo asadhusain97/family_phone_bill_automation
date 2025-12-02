@@ -17,7 +17,7 @@ This tool takes a T-Mobile bill PDF and outputs a formatted summary showing how 
 - **Equipment & Services**: Properly attributes device payments and add-on services to each member
 - **iOS Native**: Runs on iPhone via a-Shell terminal app (no C dependencies)
 - **Share Sheet Integration**: Process bills instantly from any app using iOS Shortcuts
-- **Clean Output**: Formatted table perfect for saving to Apple Notes or Messages
+- **Clean Output**: Easy-to-read format with dot leaders between names and totals, perfect for Apple Notes or Messages
 
 ## How I Use It
 
@@ -54,10 +54,23 @@ No cloud services, no email automation, no waiting. Just instant bill splitting 
    plan_cost_for_all_members: True  # True = equal split, False = tiered split
    ```
 
-5. **Optional: Map phone numbers to names** using environment variable:
+5. **Optional: Map phone numbers to names** by creating a `.env` file:
    ```bash
-   export MEMBER_NAMES='{"(999) 637-3009": "Mom", "(999) 637-5007": "Dad"}'
+   # Copy the example file and edit with your phone numbers
+   cp .env.example .env
+   # Then edit .env with your actual phone numbers and names
    ```
+
+   Or create from scratch:
+   ```bash
+   cat > .env << 'EOF'
+   MEMBER_NAMES = {"(999) 637-3009": "Mom", "(999) 637-5007": "Dad", "(999) 637-3003": "Sister"}
+   EOF
+   ```
+
+   The script will automatically load this file and display names instead of phone numbers in the output.
+
+   **Important:** Phone numbers must match EXACTLY as they appear in your PDF, including spaces and parentheses.
 
 ### Test Installation
 
@@ -104,23 +117,42 @@ Create an iOS Shortcut to process bills from the Share Sheet:
 
 ## Output Format
 
+### With Name Mapping (.env file configured)
+
 ```
 T-Mobile Bill Summary for January
 
-Member          Total
---------------  -------
-(999) 637-3009  $32.53
-(999) 637-5007  $48.62
-(999) 637-3003  $32.00
-(999) 637-5000  $32.00
-(999) 909-4005  $32.00
-(999) 746-9006  $32.00
-(999) 533-9000  $34.53
-(999) 275-8001  $32.28
-(999) 476-6003  $13.66
-(999) 433-6001  $32.56
+Raina ............................. $32.53
+Dhoni ............................. $48.62
+Yuvraj ............................ $32.00
+Sachin ............................ $32.00
+Laxman ............................ $32.00
+Navjot ............................ $32.00
+Sunil ............................. $34.53
+Rohit ............................. $32.28
+Shikhar ........................... $13.66
+Shubhman .......................... $32.56
 
-Grand Total: $322.18
+Grand Total ...................... $322.18
+```
+
+### Without Name Mapping (falls back to phone numbers)
+
+```
+T-Mobile Bill Summary for January
+
+(999) 637-3009 .................... $32.53
+(999) 637-5007 .................... $48.62
+(999) 637-3003 .................... $32.00
+(999) 637-5000 .................... $32.00
+(999) 909-4005 .................... $32.00
+(999) 746-9006 .................... $32.00
+(999) 533-9000 .................... $34.53
+(999) 275-8001 .................... $32.28
+(999) 476-6003 .................... $13.66
+(999) 433-6001 .................... $32.56
+
+Grand Total ...................... $322.18
 ```
 
 ## Configuration
@@ -140,6 +172,24 @@ page_number: 1
 # Output file location
 summarized_bill_path: "attachments/summary.csv"
 ```
+
+### .env (Name Mapping)
+
+**Optional** - Create a `.env` file to map phone numbers to friendly names:
+
+```bash
+# .env file format
+MEMBER_NAMES = {"(999) 637-3009": "Mom", "(999) 637-5007": "Dad", "(999) 637-3003": "Sister"}
+```
+
+**Important formatting rules:**
+- Must be valid JSON format with double quotes
+- Phone numbers must match exactly as they appear in the PDF (including spaces and parentheses)
+- Keep everything on a single line
+- No trailing commas in the JSON object
+
+**Without this file:** Output displays phone numbers
+**With this file:** Output displays the mapped names
 
 ### Cost Allocation Strategies
 
@@ -163,6 +213,8 @@ Each member's final total = their share of plan cost + equipment + services + on
 ├── analyze_bill_text.py     # PDF parser and data processor
 ├── configs.yml              # Configuration settings
 ├── requirements.txt         # Python dependencies
+├── .env                     # Optional: Phone number to name mappings (create from .env.example)
+├── .env.example             # Template for .env file
 └── example_bill_summary/    # Sample PDF for testing
 ```
 
@@ -171,7 +223,8 @@ Each member's final total = their share of plan cost + equipment + services + on
 - **main.py**: Entry point that validates arguments, calls the parser, and formats output
 - **analyze_bill_text.py**: PDF text extraction, table parsing, cost allocation logic
 - **configs.yml**: Family plan configuration (member count, cost strategy)
-- **requirements.txt**: Python dependencies (pandas, numpy, pypdf, pyyaml, tabulate)
+- **.env**: Optional name mappings (copy from .env.example and customize)
+- **requirements.txt**: Python dependencies (pandas, numpy, pypdf, pyyaml, tabulate, python-dotenv)
 
 ## Dependencies
 
@@ -182,6 +235,7 @@ All dependencies are iOS a-Shell compatible (pure Python, no C compilation):
 - **pypdf**: Pure Python PDF text extraction (no C dependencies)
 - **pyyaml**: Configuration file parsing
 - **tabulate**: Table formatting for output
+- **python-dotenv**: Environment variable loading for name mappings
 
 Install via: `pip install -r requirements.txt`
 
@@ -203,6 +257,12 @@ Make sure your Shortcut action is set to "Get output" or "Get result" after runn
 - Verify `page_number` in config (usually 1)
 - Check if T-Mobile changed their PDF format
 - Open an issue with your PDF structure
+
+### Names not showing up (still see phone numbers)
+- Check that your `.env` file exists in the project root directory
+- Verify the phone number format matches exactly (including spaces and parentheses)
+- Ensure the JSON in `.env` is valid (use a JSON validator)
+- Example: `(999) 637-3009` not `999-637-3009` or `(999)637-3009`
 
 ## iOS Shortcuts Tips
 

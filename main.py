@@ -11,9 +11,11 @@ Usage:
 from analyze_bill_text import main as analyze_bill_text
 
 import sys
+import os
 import logging
 import pandas as pd
 from tabulate import tabulate
+from dotenv import load_dotenv
 
 # Suppress all logging for clean stdout output
 logging.disable(logging.CRITICAL)
@@ -46,27 +48,34 @@ def print_bill_summary(summary_csv_path: str, bill_month_file: str = "billing_mo
 
     # Select only Member and Total columns for output
     output_df = df[["member", "total"]].copy()
-    output_df.columns = ["Member", "Total"]
-
-    # Create formatted table
-    table = tabulate(
-        output_df,
-        headers="keys",
-        tablefmt="simple",
-        showindex=False,
-    )
 
     # Calculate grand total
     grand_total = df["total"].replace(r"[\$,]", "", regex=True).astype(float).sum()
 
-    # Print clean output (only this will go to stdout)
+    # Print header
     print(f"\nT-Mobile Bill Summary for {bill_month}\n")
-    print(table)
-    print(f"\nGrand Total: ${grand_total:,.2f}")
+
+    # Print formatted rows with dot leaders for readability
+    max_name_length = output_df["member"].str.len().max()
+    total_width = max(max_name_length + 20, 40)  # Ensure minimum width
+
+    for _, row in output_df.iterrows():
+        name = row["member"]
+        total = row["total"]
+        # Add dot leaders between name and price
+        dots_needed = total_width - len(name) - len(total)
+        dots = "." * (max(dots_needed, 2) - 15)
+        print(f"{name} {dots} {total}")
+
+    # Print grand total
+    print(f"\n{'Grand Total'} {'.' * (total_width - len('Grand Total') - len(f'${grand_total:,.2f}') - 15)} ${grand_total:,.2f}")
 
 
 def main() -> None:
     """Main entry point for bill processing."""
+
+    # Load environment variables from .env file (for name mappings)
+    load_dotenv()
 
     # Validate arguments
     if len(sys.argv) < 2:

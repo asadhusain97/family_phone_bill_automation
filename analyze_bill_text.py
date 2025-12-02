@@ -18,8 +18,6 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-MEMBER_NAMES = os.environ.get("MEMBER_NAMES")
-
 
 def read_yaml_file(file_path):
     """Reads and parses a YAML file."""
@@ -302,8 +300,9 @@ def process_text_to_dataframe(df, plan_cost_for_all_members):
         ].sum(axis=1)
 
         # map names to numbers for better visibility
-        if MEMBER_NAMES is not None:
-            df["member"] = df["cell_nums"].replace(json.loads(MEMBER_NAMES))
+        member_names = os.environ.get("MEMBER_NAMES")
+        if member_names is not None:
+            df["member"] = df["cell_nums"].replace(json.loads(member_names))
         else:
             df["member"] = df["cell_nums"]
         df = df[
