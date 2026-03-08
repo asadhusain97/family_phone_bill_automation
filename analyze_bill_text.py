@@ -116,15 +116,15 @@ def parse_table_row(row):
         list: Parsed row with 7 elements [cell_nums, line_type, plans, equipment, services, one_time, total]
         None if parsing fails
     """
-    if row.startswith('Account'):
+    if row.startswith("Account"):
         # Account row: "Account $280.00 - $0.00 - $280.00"
         parts = row.split()
         if len(parts) >= 6:
-            return ['Account', '', parts[1], parts[2], parts[3], parts[4], parts[5]]
+            return ["Account", "", parts[1], parts[2], parts[3], parts[4], parts[5]]
     else:
         # Member row: "(999) 637-3009 Voice Included - - $0.53 $0.53"
         # Extract phone number and parse rest
-        match = re.match(r'\((\d+)\)\s*(\d+)-(\d+)\s+Voice\s+(.+)', row)
+        match = re.match(r"\((\d+)\)\s*(\d+)-(\d+)\s+Voice\s+(.+)", row)
         if match:
             phone = f"({match.group(1)}) {match.group(2)}-{match.group(3)}"
             rest = match.group(4).strip()
@@ -132,7 +132,7 @@ def parse_table_row(row):
             # Parse remaining fields: Plans Equipment Services One-time Total
             tokens = rest.split()
             if len(tokens) >= 5:
-                return [phone, 'Voice'] + tokens
+                return [phone, "Voice"] + tokens
     return None
 
 
@@ -196,7 +196,7 @@ def get_summary_table_from_pdf(path, page_number, family_cnt) -> pd.DataFrame:
         # Parse each row
         parsed_rows = []
         for line in table_lines:
-            if line.startswith('T otals'):  # Skip totals row
+            if line.startswith("T otals"):  # Skip totals row
                 continue
             parsed = parse_table_row(line)
             if parsed:
@@ -224,7 +224,9 @@ def get_summary_table_from_pdf(path, page_number, family_cnt) -> pd.DataFrame:
             ],
         )
 
-        logging.info(f"Summary table successfully extracted from PDF ({len(parsed_rows)} rows)")
+        logging.info(
+            f"Summary table successfully extracted from PDF ({len(parsed_rows)} rows)"
+        )
         return raw_df
 
     except Exception as e:
@@ -273,14 +275,20 @@ def process_text_to_dataframe(df, plan_cost_for_all_members):
 
         # fix plans
         included_members = df[df["plans"] == "Included"].shape[0]
-        plan_price_for_members = df.loc[df["cell_nums"] == "Account", "plans"].iloc[0]
-        df = df[df["cell_nums"] != "Account"]
+        account_row = df[df["cell_nums"] == "Account"].iloc[0]
+        plan_price_for_members = account_row["plans"]
+        account_equipment = account_row["equipment"]
+        account_services = account_row["services"]
+        account_one_time = account_row["one_time_charges"]
+
+        df = df[df["cell_nums"] != "Account"].copy()
         plan_price_for_others = df.loc[df["plans"] != "Included", "plans"].sum()
         other_members = df.loc[df["plans"] != "Included", "plans"].shape[0]
+        total_members = included_members + other_members
+
         if plan_cost_for_all_members:
             # get the total plan cost
             total_plan_price = plan_price_for_members + plan_price_for_others
-            total_members = included_members + other_members
             total_plan_price = total_plan_price / total_members
 
             # set this plan price for all members
@@ -291,6 +299,11 @@ def process_text_to_dataframe(df, plan_cost_for_all_members):
                 plan_price_for_members / included_members,
                 df["plans"],
             )
+
+        # Distribute account-level charges equally among all members
+        df["equipment"] += account_equipment / total_members
+        df["services"] += account_services / total_members
+        df["one_time_charges"] += account_one_time / total_members
 
         df = df[
             ["cell_nums", "plan_price", "equipment", "services", "one_time_charges"]
@@ -380,16 +393,23 @@ def main(pdf_path=None):
     raw_df = get_summary_table_from_pdf(
         bill_path, yaml_data["page_number"], yaml_data["family_count"]
     )
+    if raw_df is not None:
+        save_dataframe(raw_df, file_path="attachments/01_raw_df.csv")
 
     # process the table
     df = process_text_to_dataframe(raw_df, yaml_data["plan_cost_for_all_members"])
+    if df is not None:
+        save_dataframe(df, file_path="attachments/02_processed_df.csv")
 
     # check if the processing was fine
     total_bill_raw = get_total_from_bill(bill_path)
+    with open("attachments/03_total_bill_raw.txt", "w") as f:
+        f.write(str(total_bill_raw))
+
     total_bill_processed = float(df.total.sum())
-    assert (
-        abs(total_bill_processed - total_bill_raw) < 10**-6
-    ), f"Total bill does not match: {total_bill_processed} != {total_bill_raw}"
+    assert abs(total_bill_processed - total_bill_raw) < 10**-6, (
+        f"Total bill does not match: {total_bill_processed} != {total_bill_raw}"
+    )
 
     save_dataframe(df, file_path=yaml_data["summarized_bill_path"])
     logging.info("Processing completed successfully")
